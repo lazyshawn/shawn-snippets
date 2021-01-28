@@ -1,0 +1,55 @@
+##################################################
+# 标题
+snippet ",[2-5]" "章节符" irA
+`!p chapter = int(match.string[-1])
+snip.rv = "#"*chapter
+snip.rv += " § " if chapter==2 else " "`
+endsnippet
+##################################################
+# 分节符
+snippet ",n" "---" iA
+---
+`!p snip.rv="\n\n"`
+endsnippet
+##################################################
+# 加粗
+snippet ,d "bold font" iA
+ **${1}** ${0}
+endsnippet
+##################################################
+# 半方括号
+snippet ,b "bold font" iA
+ 「${1}」 ${0}
+endsnippet
+##################################################
+# 删除
+snippet ,s "slice" iA
+ ~~${1}~~ ${0}
+endsnippet
+##################################################
+# 图片
+snippet ,p "insert picture" iA
+![${1:notation}](${2:link})
+
+endsnippet
+##################################################
+# 加粗
+snippet ,l "bold font" iA
+[${1:notation}](${2:link})
+
+endsnippet
+##################################################
+# 代码环境
+snippet ,c "code env" iA
+\`\`\`${3:bash}
+${1}
+\`\`\`
+${2}
+endsnippet
+##################################################
+# 勾选框
+snippet ,m "check box" iA
++ [ ] ${1}
+endsnippet
+
+
