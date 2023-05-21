@@ -1,0 +1,74 @@
+
+#########################################################
+# 主函数 main
+snippet "ma(in)?( (\S+))?" "main function" br
+int main(int argc, char** argv) {
+	$1
+	return 0;
+}
+endsnippet
+#########################################################
+# 函数
+snippet "fun(ction)?( (\S+))?" "function" br
+/* 
+* @func  : $1
+* @brief : 
+* @param : 
+* @return: 
+*/
+${1:fun}($2) {
+	$0
+}
+endsnippet
+#########################################################
+# if 条件判断
+snippet if "if / else if"
+if (${1:#condition}) {
+	${2:#statements}
+}
+endsnippet
+#########################################################
+# for循环
+snippet for "for()"
+for (${2:int i=0; i<${1:n}; ++i}) {
+	${0:#statements}
+}
+endsnippet
+#########################################################
+# 段落注释
+snippet cm "Comment Section" b
+/* **************** ${VISUAL}$0 **************** */
+endsnippet
+#########################################################
+# 文件信息初始化
+snippet init "init"
+/*************************************************************************
+ * @ Brief: 
+ * @ Author: Lazyshawn
+ * @ Email: hitszshaohu@gmail.com
+ * @ Data: 
+ * @ Reference:
+ * xxx: https://baidu.com
+*************************************************************************/
+endsnippet
+#########################################################
+# 标准输入输出流
+snippet cout "std::cout"
+std::cout << $1 << std::endl;
+endsnippet
+#########################################################
+# 引入头文件
+snippet "inc(lude)?( (\S+))?" "include" br
+#include ${2:"${1:`!p snip.rv = match.group(3) if match.group(2) is not None \
+	else "header"`}"}
+endsnippet
+#########################################################
+# STL
+snippet "(vector)" "STL" irA
+`!p snip.rv = "std::"+match.group(1)+"<"`
+endsnippet
+
+snippet "([^\s].*)\.ret(urn)?" "Return (postfix)" r
+return `!p snip.rv = match.group(1)`$0;
+endsnippet
+

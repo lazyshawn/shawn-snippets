@@ -1,0 +1,51 @@
+snippet init "init" bA
+cmake_minimum_required(VERSION 2.8.12)
+project(${1:projectName})
+
+set(CMAKE_CXX_STANDARD 17)
+# Support degug
+SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
+SET(CMAKE_CXX_FLAGS_RELEASE {CXXFLAGS} -O3 -Wall)
+
+include_directories(include)
+# 3rd party lib
+link_directories(lib)
+endsnippet
+
+snippet lib "create lib" b
+# ${1:pkgName}_lib
+add_library(${2:libName} SHARED
+	src/$1/$2.cpp
+)
+include_directories(${PROJECT_SOURCE_DIR}/include)
+# Usage requirement of lib
+target_include_directories($2
+	INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
+)
+# Specify the dependencies for a lib
+# target_link_libraries($2 -lpthread)
+# Install include files
+file(GLOB_RECURSE $1_headers
+	${PROJECT_SOURCE_DIR}/include/$1/*.h
+)
+install(FILES ${$1_headers} DESTINATION 
+	${PROJECT_BINARY_DIR}/out/include/$1
+)
+
+# Install all lib in the package
+set($1_libs $2)
+install(TARGETS ${$1_libs} LIBRARY DESTINATION 
+	${PROJECT_BINARY_DIR}/out/lib/$1
+)
+endsnippet
+
+snippet exe "create exe" b
+# master
+add_executable(main
+	src/master/main.cpp
+	src/master/interface.cpp
+)
+target_link_libraries(main PUBLIC
+	miniros_lib wsg_driver uskin_driver ur5e_driver camera_driver
+)
+endsnippet

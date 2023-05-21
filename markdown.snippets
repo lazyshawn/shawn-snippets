@@ -1,0 +1,152 @@
+global !p
+def math():
+  return vim.eval('vimtex#syntax#in_mathzone()') == '1'
+def comment():
+  return vim.eval('vimtex#syntax#in_comment()') == '1'
+def env(name):
+  [x,y] = vim.eval("vimtex#env#is_inside('" + name + "')")
+  return x != '0' and y != '0'
+endglobal
+
+##################################################
+# 标题
+# https://stackoverflow.com/questions/23320148
+snippet ",2" "章节符" brA
+✨ ${1}
+`!p import unicodedata
+snip.rv = (sum(unicodedata.east_asian_width(x)=='W' for x in t[1]) + \
+len(t[1])+3)*"-"`
+endsnippet
+
+snippet ",[3-5]" "章节符" brA
+`!p chapter = int(match.string[-1])
+snip.rv = "#"*chapter
+snip.rv += " ✨ " if chapter==2 else " "`
+endsnippet
+##################################################
+# 条目 $\bullet$ or <li>
+snippet "it(em)?( (\S+))?" "item" ir
+${2:<br>}<li> ${1}${0}
+endsnippet
+##################################################
+# Surrounding
+snippet ",([bdms])"  "surrounding" irA
+`!p s_style = match.group(1)
+visual = snip.v.text.replace('\n','')
+# 粗体
+if s_style == 'b':
+    surround_l, surround_r = '**', '** '
+# 半方括号
+elif s_style == 'd':
+    surround_l, surround_r = '「', '」'
+# 勾选框
+elif s_style == 'm':
+    surround_l, surround_r = '+ [ ] ', ''
+# 中划线
+elif s_style == 's':
+    surround_l, surround_r = '~~', '~~'
+else:
+    surround_l, surround_r = '', ''
+snip.rv = surround_l`${1:`!p snip.rv=visual`}`!p snip.rv = surround_r`
+endsnippet
+##################################################
+# 图片
+snippet ,p "insert picture" bA
+![${1:notation}](${2:link})
+
+endsnippet
+##################################################
+# 链接
+snippet ,l "link" bA
+[${1:notation}](${2:link})
+
+endsnippet
+##################################################
+# 大括号分行公式
+snippet ",a" "{" bA
+$$
+\begin{aligned}${1:summary} \end{aligned}
+\left\\{\begin{aligned}
+& ${2:item_1} \\\\
+\end{aligned}\right. 
+$$
+endsnippet
+##################################################
+# 备注
+# ref: https://www.jianshu.com/p/9be87e7e15bf
+snippet "cm" "comment" bA
+[^_^]:
+		${0}
+endsnippet
+##################################################
+# 占位符
+snippet "hd" "Placeholder" iA
+<++> ${0}
+endsnippet
+##################################################
+# 居中文本
+snippet "cen(ter)?( (\S+))?" "centering" br
+<center><font face="黑体", size=4, color="black">
+${1}
+</font></center>
+${0}
+endsnippet
+##################################################
+# 在输出的PDF中强行分页
+snippet "new(page)?( (\S+))?" "newpage" br
+<div STYLE="page-break-after: always;"></div>
+${0}
+endsnippet
+##################################################
+# 引用
+snippet "ci(te)?( (\S+))?" "cite" ir
+[^$1]
+[^$1]: ${2:footnote}
+endsnippet
+##################################################
+# 代码环境
+snippet ,c "code env" iA
+\`\`\`${3:bash}
+${1}
+\`\`\`
+${2}
+endsnippet
+
+snippet "prod" "product" ir
+\\prod_{i=1}^n 
+endsnippet
+
+snippet "sum" "sum" ir
+\\sum_{i=1}^n 
+endsnippet
+
+global !p
+def myfun(snip):
+    return snip.line
+endglobal
+
+snippet buf "return" "1" be
+`!p snip.rv = str(snip.p.start)[1:2]`
+endsnippet
+
+snippet "(\w)?\$\$" "inline_math" rA
+`!p snip.rv = "" if match.group(1) is None else match.group(1) + " "
+`$${1}$`!p snip.rv = " " if t[2] and t[2][0] not in \
+[',','.','?','，','。','？'] else ""
+`${2}
+endsnippet
+
+snippet "(\$.*)(([\w{}])*)([_^])" "math_subscript_superscript" rA
+`!p snip.rv = match.group(1) + match.group(2)+match.group(4) + "{"`${1}}
+endsnippet
+
+context "math()"
+snippet "\\((bf)|(rm))" "math_fonts" irA
+`!p snip.rv = "{\\" + match.group(1)` $1}
+endsnippet
+
+snippet "(^\w*).((hat)|(bar))" "variable hat" r
+`!p snip.rv = "{\\" + match.group(2) + " " + match.group(1) + "}"`
+endsnippet
+
+

@@ -1,0 +1,215 @@
+global !p
+def math():
+	return vim.eval('vimtex#syntax#in_mathzone()') == '1'
+def comment(): 
+	return vim.eval('vimtex#syntax#in_comment()') == '1'
+def env(name):
+	[x,y] = vim.eval("vimtex#env#is_inside('" + name + "')") 
+	return x != '0' and y != '0'
+endglobal
+
+#########################################################
+# 环境
+snippet "beg(in)?( (\S+))?" "begin{} / end{}" br
+\begin{$1}
+	$2
+\end{$1}
+$0
+endsnippet
+#########################################################
+# 行内公式
+snippet mk "Inline Math" wA
+$${1}$`!p if t[2] and t[2][0] not in [',','.','?','~',' ']:
+		snip.rv = ' '
+else:
+		snip.rv = ''
+`${2}
+endsnippet
+# 行间公式
+snippet dm "Display Math" wA
+\[
+$1
+\] $0
+endsnippet
+# 公式
+snippet "equ(ation)?( (\S+))?" "begin{equation}" br
+\begin{equation}
+	$1
+\end{equation}
+
+\begin{note}
+	${2:sym}$ & ${3:description}($\rm{${4:unit}}$)； \\
+\end{note}
+endsnippet
+#########################################################
+# 图片环境(Caption为图.xxx)
+snippet "fig(ure)?( (\S+))?" "begin{figure}" br
+\begin{figure}[!ht]
+	\centering
+	${1:hint:sub(float)/gra(phic)/tab(ular)}
+	\caption{${2:caption}\label{${3:label}}}
+\end{figure}
+endsnippet
+# 子浮动体
+snippet "sub(float)?( (\S+))?" "subfloat" br
+\subfloat[${1:caption}\label{${2:label}}]{
+	${0:floatting}
+}
+endsnippet
+# 插图
+snippet "gra(phics)?( (\S+))?" "\includegraphics" br
+\includegraphics[width=89mm]{pics/${1:path}}
+endsnippet
+# 表格
+snippet "tab(ular)?( (\S+))?" "tabluar" br
+\begin{table}[!h]
+	\centering
+	\caption{${1:caption}\label{tab:${2:label}}}
+	\begin{tabular}{${3:@{}ll@{}}}
+		\toprule[1pt]
+		计数器名   & 用途 \\ \midrule
+		\bottomrule[1pt]
+	\end{tabular}
+\end{table}
+endsnippet
+#########################################################
+# 自动下标
+context "math()"
+snippet '([A-Za-z])(\d)' "auto subscript" wrA
+`!p snip.rv = match.group(1)`_`!p snip.rv = match.group(2)`
+endsnippet
+# 自动下标(两位)
+snippet '([A-Za-z])_(\d\d)' "auto subscript2" wrA
+`!p snip.rv = match.group(1)`_{`!p snip.rv = match.group(2)`}
+endsnippet
+#########################################################
+# 上标
+snippet ss "superscript" iA
+^{$1}$0
+endsnippet
+#########################################################
+snippet '((\d+)|(\d*)(\\)?([A-Za-z]+)((\^|_)(\{\d+\}|\d))*)//' "Fraction" wrA
+\\frac{`!p snip.rv = match.group(1)`}{$1}$0
+endsnippet
+#########################################################
+priority 1000
+snippet '^.*\)/' "() Fraction" wrA
+`!p
+stripped = match.string[:-1]
+depth = 0
+i = len(stripped) - 1
+while True:
+    if stripped[i] == ')': depth += 1
+    if stripped[i] == '(': depth -= 1
+    if depth == 0: break;
+    i -= 1
+snip.rv = stripped[0:i] + "\\frac{" + stripped[i+1:-1] + "}"
+`{$1}$0
+endsnippet
+#########################################################
+priority 10
+snippet "bar" "bar" riA
+\overline{$1}$0
+endsnippet
+
+priority 100
+snippet "([a-zA-Z])bar" "bar" riA
+\overline{`!p snip.rv=match.group(1)`}
+endsnippet
+#########################################################
+priority 10
+snippet "hat" "hat" riA
+\hat{$1}$0
+endsnippet
+
+priority 100
+snippet "([a-zA-Z])hat" "hat" riA
+\hat{`!p snip.rv=match.group(1)`}
+endsnippet
+#########################################################
+snippet "(\\?\w+)(,\.|\.,)" "Vector postfix" riA
+\vec{`!p snip.rv=match.group(1)`}
+endsnippet
+#########################################################
+global !p
+texMathZones = ['texMathZone'+x for x in ['A', 'AS', 'B', 'BS', 'C',
+'CS', 'D', 'DS', 'E', 'ES', 'F', 'FS', 'G', 'GS', 'H', 'HS', 'I', 'IS',
+'J', 'JS', 'K', 'KS', 'L', 'LS', 'DS', 'V', 'W', 'X', 'Y', 'Z']]
+
+texIgnoreMathZones = ['texMathText']
+texMathZoneIds = vim.eval('map('+str(texMathZones)+", 'hlID(v:val)')")
+texIgnoreMathZoneIds = vim.eval('map('+str(texIgnoreMathZones)+", 'hlID(v:val)')")
+ignore = texIgnoreMathZoneIds[0]
+
+def math():
+    synstackids = vim.eval("synstack(line('.'), col('.') - (col('.')>=2 ? 1 : 0))")
+    try:
+        first = next(
+            i for i in reversed(synstackids)
+            if i in texIgnoreMathZoneIds or i in texMathZoneIds
+        )
+        return first != ignore
+    except StopIteration:
+        return False
+endglobal
+#########################################################
+# 常用宏包
+snippet pkg "usepackage"
+\usepackage{geometry}   % 页面布局
+\usepackage{fancyhdr}   % 页眉页脚
+\usepackage{hyperref}   % 超链接
+\usepackage{ulem}       % 下划线
+\usepackage{enumitem}   % 列表环境
+\usepackage{calc}       % 算术宏包
+\usepackage{graphicx}   % 插入图片
+\usepackage{subfig}     % 子浮动体宏包，包含|\caption|宏包
+\usepackage{booktabs}   % 表格线宏包
+\usepackage{pdfpages}   % 插入PDF页面
+${0}
+endsnippet
+# 支持中文
+snippet ctex "ctex"
+% ----- 字体设置(宏包顺序可能导致字体问题)
+\PassOptionsToPackage{quiet}{xeCJK}
+% heading选项用以启用章节标题的格式设置功能
+\usepackage[UTF8,heading]{ctex}
+\usepackage[OT1]{fontenc}
+\usepackage{fontspec}
+\usepackage{xpatch}
+\usepackage{mathptmx}   % 使用Times new romans
+${0}
+endsnippet
+#########################################################
+# 文档初始化
+snippet init "init"
+${1:%! TEX program = xelatex}
+${2:%! TEX root = ../main.tex}
+%===========================================================================%
+%->> Project: ${3:Project}
+%->> Author: Lazyshawn
+%->> Coding: UTF-8
+%===========================================================================%
+
+\documentclass[a4paper]{book}
+${4:hint: pkg/ctex}
+
+\begin{document}
+	${5:Main}
+\end{document}
+endsnippet
+#########################################################
+
+context "env("equation")|math()"
+snippet "\\((bf)|(rm))" "math_fonts" irA
+`!p snip.rv = "{\\" + match.group(1)` $1}
+endsnippet
+
+context "env("equation")|math()"
+snippet "(([\w{}])?)([_^])" "math_subscript_superscript" rA
+`!p snip.rv = match.group(1)+match.group(3) + "{"`${1}}
+endsnippet
+
+
+# Reference
+# 1. [世界上最好的编辑器Vim：1700多页数学笔记是如何实时完成的](https://zhuanlan.zhihu.com/p/61036165) 
+
